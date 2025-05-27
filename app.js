@@ -3,12 +3,27 @@ import session from 'express-session';
 import bcrypt from 'bcryptjs';
 import db from './database/connection.js';
 import 'dotenv/config';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import handlebars from 'express-handlebars';
 
 const app = express();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const Handlebars = handlebars.create({
+  extname: '.html',
+  partialsDir: path.join(__dirname, 'public', 'views', 'partials'),
+  defaultLayout: false
+});
 
 app.use(express.json());
 app.use(express.static("public"));
+app.engine('html', Handlebars.engine);
+app.set('view engine', 'html');
+app.set('views', path.join(__dirname, 'public', 'views'));
+
 
 
 app.use(session({

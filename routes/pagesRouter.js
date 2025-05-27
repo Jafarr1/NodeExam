@@ -12,5 +12,19 @@ router.get('/signup', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/signup.html'));
 });
 
+    router.get('/white', (req, res) => {
+        res.render('game', {
+            color: 'white'
+        });
+    });
+    router.get('/black', (req, res) => {
+        if (!games[req.query.code]) {
+            return res.redirect('/?error=invalidCode');
+        }
+
+        res.render('game', {
+            color: 'black'
+        });
+    });
 
 export default router;

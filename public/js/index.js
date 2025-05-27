@@ -1,4 +1,4 @@
-
+document.addEventListener('DOMContentLoaded', () => {
 let gameHasStarted = false;
 var board = null
 var game = new Chess()
@@ -35,16 +35,16 @@ function onDrop (source, target) {
     // illegal move
     if (move === null) return 'snapback'
 
-    socket.emit('move', theMove);
+ //   socket.emit('move', theMove);
 
     updateStatus()
 }
 
-socket.on('newMove', function(move) {
-    game.move(move);
-    board.position(game.fen());
-    updateStatus();
-});
+//socket.on('newMove', function(move) {
+//    game.move(move);
+//    board.position(game.fen());
+//    updateStatus();
+//});
 
 // update the board position after the piece snap
 // for castling, en passant, pawn promotion
@@ -99,7 +99,7 @@ var config = {
     onDragStart: onDragStart,
     onDrop: onDrop,
     onSnapEnd: onSnapEnd,
-    pieceTheme: '/public/img/chesspieces/wikipedia/{piece}.png'
+    pieceTheme: '/img/chesspieces/wikipedia/{piece}.png'
 }
 board = Chessboard('myBoard', config)
 if (playerColor == 'black') {
@@ -108,19 +108,20 @@ if (playerColor == 'black') {
 
 updateStatus()
 
-var urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('code')) {
-    socket.emit('joinGame', {
-        code: urlParams.get('code')
-    });
-}
+//var urlParams = new URLSearchParams(window.location.search);
+//if (urlParams.get('code')) {
+ //   socket.emit('joinGame', {
+ //       code: urlParams.get('code')
+ //   });
+//}
 
-socket.on('startGame', function() {
-    gameHasStarted = true;
-    updateStatus()
-});
+//socket.on('startGame', function() {
+ //   gameHasStarted = true;
+ //   updateStatus()
+//});
 
-socket.on('gameOverDisconnect', function() {
-    gameOver = true;
-    updateStatus()
+//socket.on('gameOverDisconnect', function() {
+ //   gameOver = true;
+ //   updateStatus()
+//});
 });
