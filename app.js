@@ -6,8 +6,17 @@ import 'dotenv/config';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import handlebars from 'express-handlebars';
+import http from 'http';
+import { Server as SocketIO } from 'socket.io';
+import myIo from './sockets/io.js'; 
 
 const app = express();
+
+const server = http.createServer(app);
+const io = new SocketIO(server);
+
+global.games = {}; // shared game state for socket handling
+myIo(io);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -106,4 +115,4 @@ import pagesRouter from './routes/pagesRouter.js';
 app.use(pagesRouter);
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log("Server is running on port", PORT));
+server.listen(PORT, () => console.log("Server is running on port", PORT));

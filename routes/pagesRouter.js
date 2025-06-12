@@ -12,6 +12,10 @@ router.get('/signup', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/signup.html'));
 });
 
+router.get('/', (req, res) => { 
+    res.render('index');
+});
+
     router.get('/white', (req, res) => {
         res.render('game', {
             color: 'white'
