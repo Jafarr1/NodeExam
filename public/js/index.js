@@ -115,6 +115,22 @@ if (urlParams.get('code')) {
     });
 }
 
+$('#sendMessage').on('click', function () {
+    const message = $('#chatInput').val().trim();
+    if (message) {
+        socket.emit('chatMessage', {
+            code: new URLSearchParams(window.location.search).get('code'),
+            username: playerUsername, // You'll define this from the session
+            message
+        });
+        $('#chatInput').val('');
+    }
+});
+
+socket.on('chatMessage', ({ username, message }) => {
+    $('#messages').append(`<div><strong>${username}:</strong> ${message}</div>`);
+});
+
 socket.on('startGame', function() {
     gameHasStarted = true;
     updateStatus()

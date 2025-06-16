@@ -20,9 +20,15 @@ export default function(io) {
                 games[currentCode] = true;
                 return;
             }
+
+            
             
             io.to(currentCode).emit('startGame');
         });
+
+        socket.on('chatMessage', ({ code, username, message }) => {
+    io.to(code).emit('chatMessage', { username, message });
+});
 
         socket.on('disconnect', function() {
             console.log('socket disconnected');

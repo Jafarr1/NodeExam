@@ -10,8 +10,15 @@
         <label>PGN:</label>
         <div id="pgn"></div>
 
+        <div id="chatBox">
+    <div id="messages" style="height: 200px; overflow-y: auto; border: 1px solid #ccc;"></div>
+    <input id="chatInput" type="text" placeholder="Type a message..." />
+    <button id="sendMessage">Send</button>
+</div>
+
         <script>
             let playerColor = '{{color}}';
+            let playerUsername = '{{username}}';
             console.log('Playing as ' + playerColor);
         </script>
         <script src="/js/index.js"></script>
