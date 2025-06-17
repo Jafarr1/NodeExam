@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import path from 'path';
-
-// 🔧 You must have these defined or imported somewhere
+import { getUserWithStats } from '../database/users.js';
 import ensureLoggedIn from './middlewareRouter.js';
 
 const router = Router();
@@ -15,8 +14,14 @@ router.get('/signup', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/signup.html'));
 });
 
+
 router.get('/', ensureLoggedIn, (req, res) => {
   res.render('index');
+});
+
+router.get('/profile', ensureLoggedIn, async (req, res) => {
+  const user = await getUserWithStats(req.session.user.id);
+  res.render('profile', { user });
 });
 
 router.get('/white', ensureLoggedIn, (req, res) => {

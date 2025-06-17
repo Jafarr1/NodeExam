@@ -1,7 +1,6 @@
 import express from 'express';
 import session from 'express-session';
 import bcrypt from 'bcryptjs';
-import db from './database/connection.js';
 import 'dotenv/config';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -9,13 +8,12 @@ import handlebars from 'express-handlebars';
 import http from 'http';
 import { Server as SocketIO } from 'socket.io';
 import myIo from './sockets/io.js'; 
+import { createUser, createUserStats, getUserByUsername } from './database/users.js';
 
 const app = express();
-
 const server = http.createServer(app);
 const io = new SocketIO(server);
-
-global.games = {}; // shared game state for socket handling
+global.games = {};
 myIo(io);
 
 const __filename = fileURLToPath(import.meta.url);
@@ -33,31 +31,29 @@ app.engine('html', Handlebars.engine);
 app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'public', 'views'));
 
-
-
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false } 
+  cookie: { secure: false }
 }));
 
 
 app.post('/api/signup', async (req, res) => {
   const { username, password } = req.body;
-  
   if (!username || !password) {
     return res.status(400).json({ message: 'Username and password are required.' });
   }
 
   try {
-    const existingUser = await db.get('SELECT * FROM users WHERE username = ?', username);
+    const existingUser = await getUserByUsername(username);
     if (existingUser) {
       return res.status(409).json({ message: 'Username already taken.' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    await db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword]);
+    const userId = await createUser(username, hashedPassword);
+    await createUserStats(userId);
 
     res.status(201).json({ message: 'User registered successfully.' });
   } catch (err) {
@@ -71,7 +67,7 @@ app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const user = await db.get('SELECT * FROM users WHERE username = ?', username);
+    const user = await getUserByUsername(username);
     if (!user) {
       return res.status(401).json({ message: 'Invalid username or password.' });
     }
@@ -81,7 +77,6 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid username or password.' });
     }
 
- 
     req.session.user = { id: user.id, username: user.username };
     res.status(200).json({ message: 'Login successful.' });
   } catch (err) {
@@ -109,7 +104,6 @@ app.post('/api/logout', (req, res) => {
     res.json({ message: 'Logout successful.' });
   });
 });
-
 
 import pagesRouter from './routes/pagesRouter.js';
 app.use(pagesRouter);

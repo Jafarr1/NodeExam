@@ -1,26 +1,50 @@
-<html>
-    <head>
-        {{> head}}
-    </head>
-    <body>
-        <h2>Game code</h2>
-        <input type="text" id="codeInput">
-        <button id="createGame">Create game</button>
-        <button id="joinGame">Join game</button>
-        <div style="color: red" id="errorMessage"></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {{> head}}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chess Game</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h2>Enter Game Code</h2>
+    <input
+      type="text"
+      id="codeInput"
+      placeholder="Game code..."
+      autofocus
+      required
+    />
+    <button id="createGame">Create Game</button>
+    <button id="joinGame">Join Game</button>
+    <div id="errorMessage"></div>
+  </div>
 
-        <script>
-            $('#createGame').on('click', function() {
-                window.location.replace('/white?code=' + $('#codeInput').val());
-            });
-            $('#joinGame').on('click', function() {
-                window.location.replace('/black?code=' + $('#codeInput').val());
-            });
+  <script>
+    function navigateTo(color) {
+      const code = $('#codeInput').val().trim();
+      if (!code) {
+        return $('#errorMessage').text('Please enter a game code.');
+      }
+      window.location.replace(`/${color}?code=${code}`);
+    }
 
-            var urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('error') == 'invalidCode') {
-                $('#errorMessage').text('Invalid invite code');
-            }
-        </script>
-    </body>
+    $('#createGame').on('click', () => navigateTo('white'));
+    $('#joinGame').on('click', () => navigateTo('black'));
+
+    $('#codeInput').on('keypress', function (e) {
+      if (e.which === 13) {
+        navigateTo('white');
+      }
+    });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'invalidCode') {
+      $('#errorMessage').text('Invalid invite code');
+    }
+  </script>
+</body>
 </html>

@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
 
       if (res.ok) {
-        window.location.href = '/home.html';
+        window.location.href = '/';
       } else {
         showError(data.message || 'Login failed.');
       }
