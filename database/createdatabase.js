@@ -15,15 +15,6 @@ await db.exec(`
   );
 `);
 
-await db.exec(`
-  CREATE TABLE IF NOT EXISTS user_stats (
-    user_id INTEGER PRIMARY KEY,
-    wins INTEGER DEFAULT 0,
-    losses INTEGER DEFAULT 0,
-    games_played INTEGER DEFAULT 0,
-    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-  );
-`);
 
 if (deleteMode) {
   console.log("Database reset and ready.");

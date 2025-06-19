@@ -1,5 +1,3 @@
-
-
 export default function(io) {
     io.on('connection', socket => {
         console.log('New socket connection');
@@ -26,6 +24,19 @@ export default function(io) {
 
         socket.on('resign', ({ code, username }) => {
   socket.to(code).emit('opponentResigned', { username });
+});
+
+
+    socket.on('requestRematch', ({ code, username }) => {
+      socket.to(code).emit('rematchRequested', { username });
+    });
+
+        socket.on('acceptRematch', ({ code, username }) => {
+      io.to(code).emit('startRematch');
+    });
+
+    socket.on('chatMessage', ({ code, username, message }) => {
+  io.to(code).emit('chatMessage', { username, message });
 });
 
         socket.on('disconnect', function() {

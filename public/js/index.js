@@ -1,154 +1,204 @@
 document.addEventListener('DOMContentLoaded', () => {
-let gameHasStarted = false;
-var board = null
-var game = new Chess()
-var $status = $('#status')
-var $pgn = $('#pgn')
-let gameOver = false;
+  const urlParams = new URLSearchParams(window.location.search);
+  const gameCode = urlParams.get('code');
+  const $status = $('#status');
+  const $pgn = $('#pgn');
+  let gameHasStarted = false;
+  let gameOver = false;
+  let gameOverReason = null;
 
-function onDragStart (source, piece, position, orientation) {
-    // do not pick up pieces if the game is over
-    if (game.game_over()) return false
-    if (!gameHasStarted) return false;
-    if (gameOver) return false;
+  const game = new Chess();
 
-    if ((playerColor === 'black' && piece.search(/^w/) !== -1) || (playerColor === 'white' && piece.search(/^b/) !== -1)) {
-        return false;
+  const config = {
+    draggable: true,
+    position: 'start',
+    onDragStart,
+    onDrop,
+    onSnapEnd,
+    pieceTheme: '/img/chesspieces/wikipedia/{piece}.png',
+  };
+  const board = Chessboard('myBoard', config);
+
+  if (playerColor === 'black') {
+    board.flip();
+  }
+
+  function onDragStart(source, piece) {
+    if (game.game_over() || !gameHasStarted || gameOver) return false;
+
+    if (
+      (playerColor === 'black' && piece.startsWith('w')) ||
+      (playerColor === 'white' && piece.startsWith('b'))
+    ) {
+      return false;
     }
 
-    // only pick up pieces for the side to move
-    if ((game.turn() === 'w' && piece.search(/^b/) !== -1) || (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-        return false
+    if (
+      (game.turn() === 'w' && piece.startsWith('b')) ||
+      (game.turn() === 'b' && piece.startsWith('w'))
+    ) {
+      return false;
     }
-}
+  }
 
-function onDrop (source, target) {
-    let theMove = {
-        from: source,
-        to: target,
-        promotion: 'q' // NOTE: always promote to a queen for simplicity
+  const moveSound = new Audio('/sounds/move-self.mp3');
+
+  function onDrop(source, target) {
+    const theMove = {
+      from: source,
+      to: target,
+      promotion: 'q',
     };
-    // see if the move is legal
-    var move = game.move(theMove);
 
-
-    // illegal move
-    if (move === null) return 'snapback'
+    const move = game.move(theMove);
+    if (move === null) return 'snapback';
 
     socket.emit('move', theMove);
+    updateStatus();
+    moveSound.play();
+  }
 
-    updateStatus()
-}
+  function onSnapEnd() {
+    board.position(game.fen());
+  }
 
-socket.on('newMove', function(move) {
+  function updateStatus() {
+    let status = '';
+    const moveColor = game.turn() === 'w' ? 'White' : 'Black';
+
+    if (game.in_checkmate()) {
+      status = `Game over, ${moveColor} is in checkmate.`;
+    } else if (game.in_draw()) {
+      status = 'Game over, drawn position';
+    } else if (gameOver) {
+      switch (gameOverReason) {
+        case 'resign':
+          status = 'You resigned. Game over.';
+          break;
+        case 'winByResign':
+          status = 'Opponent resigned. You win!';
+          break;
+        case 'disconnect':
+          status = 'Opponent disconnected, you win!';
+          break;
+        default:
+          status = 'Game over.';
+      }
+    } else if (!gameHasStarted) {
+      status = 'Waiting for black to join';
+    } else {
+      status = `${moveColor} to move`;
+      if (game.in_check()) status += `, ${moveColor} is in check`;
+    }
+
+    $status.html(status);
+    $pgn.html(`<pre>${game.pgn()}</pre>`);
+  }
+
+  socket.on('newMove', (move) => {
     game.move(move);
     board.position(game.fen());
     updateStatus();
-});
 
-// update the board position after the piece snap
-// for castling, en passant, pawn promotion
-function onSnapEnd () {
-    board.position(game.fen())
-}
+    moveSound.play();
+  });
 
-function updateStatus () {
-    var status = ''
+  socket.on('startGame', () => {
+    gameHasStarted = true;
+    updateStatus();
+  });
 
-    var moveColor = 'White'
-    if (game.turn() === 'b') {
-        moveColor = 'Black'
+  socket.on('opponentResigned', ({ username }) => {
+    alert(`${username} resigned. You win!`);
+    gameOver = true;
+    gameOverReason = 'winByResign';
+    updateStatus();
+    showGameOverModal(`${username} resigned. You win!`);
+  });
+
+  socket.on('gameOverDisconnect', () => {
+    gameOver = true;
+    gameOverReason = 'disconnect';
+    updateStatus();
+    showGameOverModal('Opponent disconnected. You win!');
+  });
+
+  socket.on('chatMessage', ({ username, message }) => {
+    $('#messages').append(`<div><strong>${username}:</strong> ${message}</div>`);
+  });
+
+  socket.on('rematchRequested', ({ username }) => {
+    if (confirm(`${username} wants a rematch. Accept?`)) {
+      socket.emit('acceptRematch', { code: gameCode, username: playerUsername });
     }
+  });
 
-    // checkmate?
-    if (game.in_checkmate()) {
-        status = 'Game over, ' + moveColor + ' is in checkmate.'
-    }
+  socket.on('startRematch', () => {
+    resetGame();
+    alert('Rematch started!');
+    document.getElementById('gameOverModal').style.display = 'none';
+    document.getElementById('rematchModalBtn').disabled = false;
+  });
 
-    // draw?
-    else if (game.in_draw()) {
-        status = 'Game over, drawn position'
-    }
+  document.getElementById('resignBtn').addEventListener('click', onResignClicked);
+  document.getElementById('rematchModalBtn').addEventListener('click', onRequestRematch);
+  document.getElementById('goBackBtn').addEventListener('click', () => {
+    window.location.href = '/';
+  });
 
-    else if (gameOver) {
-        status = 'Opponent disconnected, you win!'
-    }
-
-    else if (!gameHasStarted) {
-        status = 'Waiting for black to join'
-    }
-
-    // game still on
-    else {
-        status = moveColor + ' to move'
-
-        // check?
-        if (game.in_check()) {
-            status += ', ' + moveColor + ' is in check'
-        }
-        
-    }
-
-    $status.html(status)
-    $pgn.html(game.pgn())
-}
-
-var config = {
-    draggable: true,
-    position: 'start',
-    onDragStart: onDragStart,
-    onDrop: onDrop,
-    onSnapEnd: onSnapEnd,
-    pieceTheme: '/img/chesspieces/wikipedia/{piece}.png'
-}
-board = Chessboard('myBoard', config)
-if (playerColor == 'black') {
-    board.flip();
-}
-
-updateStatus()
-
-var urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('code')) {
-    socket.emit('joinGame', {
-        code: urlParams.get('code')
-    });
-}
-
-$('#sendMessage').on('click', function () {
+  $('#sendMessage').on('click', () => {
     const message = $('#chatInput').val().trim();
     if (message) {
-        socket.emit('chatMessage', {
-            code: new URLSearchParams(window.location.search).get('code'),
-            username: playerUsername, // You'll define this from the session
-            message
-        });
-        $('#chatInput').val('');
+        console.log('Sending message:', message);
+
+      socket.emit('chatMessage', {
+        code: gameCode,
+        username: playerUsername,
+        message,
+      });
+      $('#chatInput').val('');
     }
-});
+  });
 
-document.getElementById('resignBtn').addEventListener('click', () => {
-  if (confirm('Are you sure you want to resign?')) {
-    socket.emit('resign', { code, username: playerUsername });
+  function onResignClicked() {
+    if (gameOver) return;
+    if (confirm('Are you sure you want to resign?')) {
+      socket.emit('resign', { code: gameCode, username: playerUsername });
+      gameOver = true;
+      gameOverReason = 'resign';
+      updateStatus();
+      document.getElementById('resignBtn').disabled = true;
+      showGameOverModal('You resigned. You lost.');
+    }
   }
-});
 
-socket.on('opponentResigned', ({ username }) => {
-  alert(`${username} resigned. You win!`);
-  // Optionally disable board input or mark game as over
-});
+  function onRequestRematch() {
+    socket.emit('requestRematch', { code: gameCode, username: playerUsername });
+  }
 
-socket.on('chatMessage', ({ username, message }) => {
-    $('#messages').append(`<div><strong>${username}:</strong> ${message}</div>`);
-});
-
-socket.on('startGame', function() {
-    gameHasStarted = true;
-    updateStatus()
-});
-
-socket.on('gameOverDisconnect', function() {
+  function showGameOverModal(message) {
+    const modal = document.getElementById('gameOverModal');
+    const msgElem = document.getElementById('gameOverMessage');
+    msgElem.textContent = message;
+    modal.style.display = 'flex';
     gameOver = true;
-    updateStatus()
-});
+  }
+
+  function resetGame() {
+    game.reset();
+    board.start();
+    gameOver = false;
+    gameOverReason = null;
+    gameHasStarted = true;
+    updateStatus();
+    document.getElementById('gameOverModal').style.display = 'none';
+    document.getElementById('resignBtn').disabled = false;
+  }
+
+
+  if (gameCode) {
+    socket.emit('joinGame', { code: gameCode });
+  }
+
+  updateStatus();
 });
