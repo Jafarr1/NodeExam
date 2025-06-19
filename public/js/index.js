@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const theMove = {
       from: source,
       to: target,
-      promotion: 'q',
+      promotion: 'q', // promotion is always queen to keep it simple
     };
 
     const move = game.move(theMove);

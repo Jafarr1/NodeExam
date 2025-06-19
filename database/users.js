@@ -8,6 +8,13 @@ export async function createUser(username, hashedPassword) {
   return result.lastID;
 }
 
+export async function createUserStats(userId) {
+  // You might want to keep or remove this depending if you use it for something else
+  return db.run(
+    'INSERT INTO user_stats (user_id) VALUES (?)',
+    [userId]
+  );
+}
 
 export async function getUserByUsername(username) {
   return db.get(
@@ -15,3 +22,5 @@ export async function getUserByUsername(username) {
     [username]
   );
 }
+
+// Removed getUserWithStats, recordWin, recordLoss to disable stats tracking completely
