@@ -20,14 +20,12 @@ export default function(io) {
                 games[currentCode] = true;
                 return;
             }
-
-            
             
             io.to(currentCode).emit('startGame');
         });
 
-        socket.on('chatMessage', ({ code, username, message }) => {
-    io.to(code).emit('chatMessage', { username, message });
+        socket.on('resign', ({ code, username }) => {
+  socket.to(code).emit('opponentResigned', { username });
 });
 
         socket.on('disconnect', function() {

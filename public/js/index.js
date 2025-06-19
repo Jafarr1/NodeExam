@@ -127,6 +127,17 @@ $('#sendMessage').on('click', function () {
     }
 });
 
+document.getElementById('resignBtn').addEventListener('click', () => {
+  if (confirm('Are you sure you want to resign?')) {
+    socket.emit('resign', { code, username: playerUsername });
+  }
+});
+
+socket.on('opponentResigned', ({ username }) => {
+  alert(`${username} resigned. You win!`);
+  // Optionally disable board input or mark game as over
+});
+
 socket.on('chatMessage', ({ username, message }) => {
     $('#messages').append(`<div><strong>${username}:</strong> ${message}</div>`);
 });

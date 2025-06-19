@@ -3,28 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sign Up</title>
-  <link rel="stylesheet" href="/style.css" />
+  <title>Login</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main>
     <div class="container">
-      <h1>Sign Up</h1>
+      <h1>Login</h1>
 
       <div id="error" class="error" style="display: none;"></div>
 
-      <form id="signup-form">
+      <form id="login-form">
         <input type="text" placeholder="Username" id="username" required />
         <input type="password" placeholder="Password" id="password" required />
-        <button type="submit">Sign Up</button>
+        <button type="submit">Login</button>
       </form>
 
       <p class="signup-link">
-        Already have an account? <a href="/login">Login here</a>
+        Don't have an account? <a href="/signup">Sign up here</a>
       </p>
     </div>
   </main>
 
-  <script src="signup.js"></script>
+  <script src="/js/login.js"></script>
 </body>
 </html>

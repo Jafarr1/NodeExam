@@ -8,7 +8,7 @@ import handlebars from 'express-handlebars';
 import http from 'http';
 import { Server as SocketIO } from 'socket.io';
 import myIo from './sockets/io.js'; 
-import { createUser, createUserStats, getUserByUsername } from './database/users.js';
+import { createUser, getUserByUsername } from './database/users.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -38,7 +38,7 @@ app.use(session({
   cookie: { secure: false }
 }));
 
-
+// Signup
 app.post('/api/signup', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
@@ -62,7 +62,7 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
-
+// Login
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 

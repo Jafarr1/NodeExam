@@ -1,17 +1,14 @@
 import { Router } from 'express';
-import path from 'path';
-import { getUserWithStats } from '../database/users.js';
 import ensureLoggedIn from './middlewareRouter.js';
 
 const router = Router();
-const __dirname = process.cwd();
 
 router.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/login.html'));
+  res.render('login');
 });
 
 router.get('/signup', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/signup.html'));
+  res.render('signup');
 });
 
 
@@ -19,10 +16,6 @@ router.get('/', ensureLoggedIn, (req, res) => {
   res.render('index');
 });
 
-router.get('/profile', ensureLoggedIn, async (req, res) => {
-  const user = await getUserWithStats(req.session.user.id);
-  res.render('profile', { user });
-});
 
 router.get('/white', ensureLoggedIn, (req, res) => {
   res.render('game', {
