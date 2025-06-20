@@ -1,11 +1,11 @@
 export default function(io) {
     io.on('connection', socket => {
-        console.log('New socket connection');
+        
 
         let currentCode = null;
 
         socket.on('move', function(move) {
-            console.log('move detected')
+            
 
             io.to(currentCode).emit('newMove', move);
         });
@@ -40,7 +40,7 @@ export default function(io) {
 });
 
         socket.on('disconnect', function() {
-            console.log('socket disconnected');
+            
 
             if (currentCode) {
                 io.to(currentCode).emit('gameOverDisconnect');
