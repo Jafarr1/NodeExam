@@ -8,12 +8,6 @@ export async function createUser(username, hashedPassword) {
   return result.lastID;
 }
 
-export async function createUserStats(userId) {
-  return db.run(
-    'INSERT INTO user_stats (user_id) VALUES (?)',
-    [userId]
-  );
-}
 
 export async function getUserByUsername(username) {
   return db.get(
